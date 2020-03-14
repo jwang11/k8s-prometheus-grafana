@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: grafana-core
@@ -7,7 +7,10 @@ metadata:
     app: grafana
     component: core
 spec:
-  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+      component: core
   template:
     metadata:
       labels:
@@ -15,38 +18,49 @@ spec:
         component: core
     spec:
       containers:
-      - image: grafana/grafana:4.2.0
+      - image: grafana/grafana:5.4.3
         name: grafana-core
         imagePullPolicy: IfNotPresent
-        # env:
+        ports:
+        - containerPort: 3000
+          name: grafana
+        env:
+        - name: GF_SECURITY_ADMIN_USER
+          value: admin
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: admin321
+        readinessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /api/health
+            port: 3000
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 30
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /api/health
+            port: 3000
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
         resources:
-          # keep request = limit to keep this container in guaranteed class
           limits:
             cpu: 100m
-            memory: 100Mi
+            memory: 256Mi
           requests:
             cpu: 100m
-            memory: 100Mi
-        env:
-          # The following env variables set up basic auth twith the default admin user and admin password.
-          - name: GF_AUTH_BASIC_ENABLED
-            value: "true"
-          - name: GF_AUTH_ANONYMOUS_ENABLED
-            value: "false"
-          # - name: GF_AUTH_ANONYMOUS_ORG_ROLE
-          #   value: Admin
-          # does not really work, because of template variables in exported dashboards:
-          # - name: GF_DASHBOARDS_JSON_ENABLED
-          #   value: "true"
-        readinessProbe:
-          httpGet:
-            path: /login
-            port: 3000
-          # initialDelaySeconds: 30
-          # timeoutSeconds: 1
+            memory: 256Mi
         volumeMounts:
         - name: grafana-persistent-storage
-          mountPath: /var
+          mountPath: /var/lib/grafana
+      securityContext:
+        fsGroup: 472
+        runAsUser: 472
       volumes:
       - name: grafana-persistent-storage
         emptyDir: {}
