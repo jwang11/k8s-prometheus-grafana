@@ -25,6 +25,7 @@ spec:
         - "--config.file=/etc/prometheus/prometheus.yml"
         - "--storage.tsdb.path=/prometheus"
         - "--storage.tsdb.retention=24h"
+        - "--web.enable-lifecycle"
         ports:
         - containerPort: 9090
           protocol: TCP
@@ -38,8 +39,8 @@ spec:
             cpu: 100m
             memory: 100Mi
           limits:
-            cpu: 500m
-            memory: 2500Mi
+            cpu: 100m
+            memory: 150Mi
       serviceAccountName: prometheus    
       volumes:
       - name: data

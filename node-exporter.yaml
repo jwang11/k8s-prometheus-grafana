@@ -16,7 +16,7 @@ spec:
         k8s-app: node-exporter
     spec:
       containers:
-      - image: prom/node-exporter
+      - image: quay.io/prometheus/node-exporter
         name: node-exporter
         ports:
         - containerPort: 9100
